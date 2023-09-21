@@ -9,9 +9,12 @@ export const CONTROL_VIEW = 'presentation-control-view';
 export default class ControlView extends ItemView implements PresentationState {
 
     private readonly layouts: Map<number, string[]> = new Map<number, string[]>([
-        [1, []],
+        [1, [""]],
         [2, ["a", "b"]],
-        [3, ["a", "b", "c"]],
+        [3, ["a", "b", "c", "d"]],
+        [4, [""]],
+        [5, ["a", "b"]],
+        [6, [""]]
     ])
 
     items: PresentationItem[];
@@ -19,10 +22,8 @@ export default class ControlView extends ItemView implements PresentationState {
 
     private layoutsRoot: HTMLDivElement;
     private listRoot: HTMLDivElement;
-    private trash: HTMLDivElement;
 
     private itemsSortable: Sortable;
-    private trashSortable: Sortable;
 
     constructor(readonly leaf: WorkspaceLeaf, readonly plugin: PresentationWindowPlugin) {
         super(leaf);
@@ -46,7 +47,6 @@ export default class ControlView extends ItemView implements PresentationState {
 
     private async render() {
         this.itemsSortable?.destroy();
-        this.trashSortable?.destroy();
 
         const container = this.containerEl.children[1]
         container.empty()
@@ -55,47 +55,18 @@ export default class ControlView extends ItemView implements PresentationState {
         this.layoutsRoot = root.createDiv({cls: "control-view-layouts"});
         this.listRoot = root.createDiv({cls: "control-view-items"});
 
-        this.listRoot.addEventListener("dragover", (e) => {
-            e.preventDefault()
-            if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
-        })
-
-        this.listRoot.addEventListener("drop", (e) => {
-            e.preventDefault()
-            console.log(e.dataTransfer?.files.item(0));
-        })
-
         this.renderLayouts();
         this.items.forEach(item => this.renderItem(item))
-
-        this.trash = root.createDiv({cls: ["control-view-trash", "hidden"]})
 
         this.itemsSortable = new Sortable(this.listRoot, {
             draggable: ".control-view-item",
             sort: true,
             dataIdAttr: "data-image-path",
-            group: {name: "control-view-items", pull: "clone", put: false},
-            onStart: () => {
-                this.trash.removeClass("hidden");
-            },
+
             onEnd: async (e: Sortable.SortableEvent) => {
-                this.trash.addClass("hidden");
-                if (!e.pullMode) {
-                    return this.itemsReordered(e);
-                }
-            },
-            onRemove: async (e: Sortable.SortableEvent) => {
-                if (e.oldIndex) {
-                    this.trash.removeChild(e.item)
-                    return this.removeItem(e.clone, this.items[e.oldIndex]);
-                }
+                return this.itemsReordered(e);
             }
         });
-
-        this.trashSortable = new Sortable(this.trash, {
-            group: {name: "control-view-items", pull: false, put: true}
-        })
-
     }
 
     renderLayouts() {

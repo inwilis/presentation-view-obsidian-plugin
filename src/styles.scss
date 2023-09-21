@@ -21,6 +21,12 @@
     .control-view-layouts {
         display: flex;
         flex-direction: row;
+        justify-content: center;
+
+        height: 5em;
+
+        border-bottom: 1px solid var(--tab-outline-color);
+        margin-bottom: 0.5em;
 
         .layout-button {
             width: 6em;
@@ -122,17 +128,7 @@
             border: 1px dashed var(--accent);
         }
 
-        //.sortable-chosen {
-        //    .control-view-item-number-text:before {
-        //        content: "";
-        //    }
-        //}
-    }
 
-    .control-view-trash {
-        height: 4em;
-        border: 1px solid var(--accent);
-        background-color: var(--dark-sidebar);
     }
 
     .hidden {
@@ -181,6 +177,27 @@
 
 .layout-3b {
     display: grid;
+    grid-auto-flow: row;
+    grid-template: 1fr 1fr / 1fr 2fr;
+
+    .layout-item:nth-child(1) {
+        align-self: end;
+    }
+
+    .layout-item:nth-child(2) {
+        grid-row-end: span 2;
+        align-self: stretch;
+        justify-self: stretch;
+    }
+
+    .layout-item:nth-child(3) {
+        align-self: start;
+
+    }
+}
+
+.layout-3c {
+    display: grid;
     grid-auto-flow: column;
     grid-template: 1fr 1fr / 1fr 2fr;
 
@@ -199,6 +216,70 @@
     }
 }
 
-.layout-3c {
+.layout-3d {
     display: flex;
+}
+
+.layout-4 {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template: 1fr 1fr / 1fr 1fr;
+}
+
+.layout-5a {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template: 1fr 1fr / repeat(6, 1fr);
+
+    .layout-item:nth-child(1) {
+        grid-column-end: span 3;
+    }
+
+    .layout-item:nth-child(2) {
+        grid-column-end: span 3;
+    }
+
+    .layout-item:nth-child(3) {
+        grid-column-end: span 2;
+    }
+
+    .layout-item:nth-child(4) {
+        grid-column-end: span 2;
+    }
+
+    .layout-item:nth-child(5) {
+        grid-column-end: span 2;
+    }
+}
+
+.layout-5b {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template: 1fr 1fr / repeat(6, 1fr);
+
+    .layout-item:nth-child(1) {
+        grid-column-end: span 2;
+    }
+
+    .layout-item:nth-child(2) {
+        grid-column-end: span 2;
+    }
+
+    .layout-item:nth-child(3) {
+        grid-column-end: span 2;
+    }
+
+    .layout-item:nth-child(4) {
+        grid-column-end: span 3;
+    }
+
+    .layout-item:nth-child(5) {
+        grid-column-end: span 3;
+    }
+}
+
+.layout-6 {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template: 1fr 1fr / 1fr 1fr 1fr;
 }
