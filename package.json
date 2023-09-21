@@ -1,7 +1,7 @@
 {
-	"name": "presentation-window-obsidian-plugin",
+	"name": "presentation-view-obsidian-plugin",
 	"version": "0.0.1",
-	"description": "Presentation Window",
+	"description": "Presentation View",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

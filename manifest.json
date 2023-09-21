@@ -1,9 +1,9 @@
 {
-	"id": "presentation-window-obsidian-plugin",
-	"name": "Presentation Window",
+	"id": "presentation-view-obsidian-plugin",
+	"name": "Presentation View",
 	"version": "0.0.1",
 	"minAppVersion": "1.4.11",
-	"description": "Presentation Window",
+	"description": "Presentation View",
 	"author": "inwilis",
 	"authorUrl": "https://github.com/inwilis",
 	"isDesktopOnly": true
