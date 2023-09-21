@@ -1,134 +1,72 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import {FileSystemAdapter, Plugin, TFile, WorkspaceLeaf} from 'obsidian';
+import PresentationView, {PRESENTATION_VIEW} from "./presentationView";
+import ControlView, {CONTROL_VIEW} from "./controlView";
 
-// Remember to rename these classes and interfaces!
+export default class PresentationWindowPlugin extends Plugin {
 
-interface MyPluginSettings {
-	mySetting: string;
+    private readonly viewSplit: Map<string, string> = new Map<string, string>([
+        [PRESENTATION_VIEW, "root"], [CONTROL_VIEW, "right"]])
+
+    async onload() {
+        this.registerView(PRESENTATION_VIEW, (leaf: WorkspaceLeaf) => new PresentationView(leaf, this));
+        this.registerView(CONTROL_VIEW, (leaf: WorkspaceLeaf) => new ControlView(leaf, this));
+
+        this.registerEvent(
+            this.app.workspace.on("file-menu", (menu, file) => {
+                if ((this.app.vault.adapter instanceof FileSystemAdapter) && (file instanceof TFile)) {
+
+                    menu.addItem((item) => {
+                        item.setTitle("Add to Presentation View")
+                            .setIcon("open-elsewhere-glyph")
+                            .onClick(async () =>
+                                this.getControlView().then(view => view.addFile(file))
+                            );
+                    });
+                }
+            }));
+    }
+
+    onunload() {
+
+    }
+
+    async showAndGetView(viewId: string, state?: any) {
+        const views = this.app.workspace.getLeavesOfType(viewId)
+
+        let leaf: WorkspaceLeaf;
+
+        if (views && views.length > 0) {
+            leaf = views[0];
+
+        } else {
+            leaf = (this.viewSplit.get(viewId) == "root"
+                ? this.app.workspace.getLeaf(true)
+                : this.app.workspace.getRightLeaf(false))
+        }
+
+        if (state) {
+            await leaf.setViewState({
+                type: viewId,
+                active: leaf.getViewState().active,
+                state: state
+            }).then(() => this.app.workspace.revealLeaf(leaf))
+        } else {
+            await leaf.setViewState({
+                type: viewId,
+                active: leaf.getViewState().active
+            }).then(() => this.app.workspace.revealLeaf(leaf))
+        }
+
+        return leaf
+    }
+
+    async getControlView() {
+        return this.showAndGetView(CONTROL_VIEW).then(leaf => leaf.view as ControlView);
+    }
+
+    async getPresentationView() {
+        return this.showAndGetView(PRESENTATION_VIEW).then(leaf => leaf.view as PresentationView);
+    }
+
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
-
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
-
-	async onload() {
-		await this.loadSettings();
-
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
-}
