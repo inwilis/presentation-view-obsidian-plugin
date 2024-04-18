@@ -24,6 +24,16 @@ export default class PresentationWindowPlugin extends Plugin {
                     });
                 }
             }));
+        this.registerEvent(
+            this.app.workspace.on("url-menu", (menu, url) =>
+                menu.addItem((item) => {
+                    item.setTitle("Add to Presentation View")
+                        .setIcon("open-elsewhere-glyph")
+                        .onClick(async () =>
+                            this.getControlView().then(view => view.addUrl(url))
+                        );
+                })
+            ));
     }
 
     onunload() {

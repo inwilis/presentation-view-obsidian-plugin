@@ -1,6 +1,6 @@
 import {ItemView, ViewStateResult, WorkspaceLeaf} from "obsidian";
 import PresentationWindowPlugin from "./main";
-import {PresentationItem, PresentationState} from "./presentationState";
+import {PresentationItem, PresentationItemKind, PresentationState} from "./presentationState";
 
 export const PRESENTATION_VIEW = 'presentation-view';
 
@@ -42,10 +42,22 @@ export default class PresentationView extends ItemView implements PresentationSt
             this.imageRoot.addClass(this.layout);
         }
 
-        this.items.forEach((image: PresentationItem) => this.imageRoot.createEl("img", {
-            attr: {src: this.app.vault.adapter.getResourcePath(image.path)},
-            cls: "layout-item"
-        }));
+        this.items.forEach((item: PresentationItem) => this.renderPresentationItem(item, this.imageRoot));
+    }
+
+    private renderPresentationItem(item: PresentationItem, root: HTMLDivElement) {
+        if (item.kind == PresentationItemKind.LocalImage) {
+            root.createEl("img", {
+                attr: {src: this.app.vault.adapter.getResourcePath(item.path)},
+                cls: "layout-item"
+            });
+
+        } else if (item.kind == PresentationItemKind.RemoteImage) {
+            root.createEl("img", {
+                attr: {src: item.path},
+                cls: "layout-item"
+            });
+        }
     }
 
     getState(): PresentationState {

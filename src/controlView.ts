@@ -1,7 +1,7 @@
 import {ItemView, setIcon, setTooltip, TFile, ViewStateResult, WorkspaceLeaf} from "obsidian";
 import PresentationWindowPlugin from "./main";
 import {PRESENTATION_VIEW} from "./presentationView";
-import {PresentationItem, PresentationState} from "./presentationState";
+import {PresentationItem, PresentationItemKind, PresentationState} from "./presentationState";
 import Sortable = require("sortablejs");
 
 export const CONTROL_VIEW = 'presentation-control-view';
@@ -122,6 +122,14 @@ export default class ControlView extends ItemView implements PresentationState {
         return this.itemsChanged();
     }
 
+    addUrl(url: string) {
+        let presentationItem = this.createPresentationItemFromUrl(url);
+        this.items.push(presentationItem)
+        this.renderItem(presentationItem);
+
+        return this.itemsChanged();
+    }
+
     private async removeItem(item: HTMLElement, presentationItem: PresentationItem) {
         this.listRoot.removeChild(item);
         this.items.remove(presentationItem)
@@ -146,14 +154,25 @@ export default class ControlView extends ItemView implements PresentationState {
         return this.refreshPresentationView();
     }
 
+
     private createPresentationItem(file: TFile) {
         const presentationItem = new PresentationItem();
         presentationItem.title = file.name;
         presentationItem.path = file.path;
+        presentationItem.kind = PresentationItemKind.LocalImage;
 
         return presentationItem;
     }
 
+    private createPresentationItemFromUrl(link: string) {
+        const url = new URL(link);
+        const presentationItem = new PresentationItem();
+        presentationItem.title = `${url.protocol}//${url.host}${url.pathname}`;
+        presentationItem.path = link;
+        presentationItem.kind = PresentationItemKind.RemoteImage;
+
+        return presentationItem;
+    }
 
     async refreshPresentationView() {
         return this.plugin.showAndGetView(PRESENTATION_VIEW, {items: [...this.items], layout: this.layout});
