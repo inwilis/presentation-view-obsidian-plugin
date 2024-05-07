@@ -22,8 +22,11 @@ export default class ControlView extends ItemView implements PresentationState {
 
     private layoutsRoot: HTMLDivElement;
     private listRoot: HTMLDivElement;
+    private toolsRoot: HTMLDivElement;
 
     private itemsSortable: Sortable;
+
+    private draggedFile: TFile | null;
 
     constructor(readonly leaf: WorkspaceLeaf, readonly plugin: PresentationWindowPlugin) {
         super(leaf);
@@ -45,7 +48,14 @@ export default class ControlView extends ItemView implements PresentationState {
         return this.render();
     }
 
+    handleDrop(event: DragEvent, file: any, x: unknown) {
+        if (file?.file instanceof TFile) {
+            this.draggedFile = file.file;
+        }
+    }
+
     private async render() {
+
         this.itemsSortable?.destroy();
 
         const container = this.containerEl.children[1]
@@ -54,7 +64,9 @@ export default class ControlView extends ItemView implements PresentationState {
         const root = container.createDiv({cls: "control-view"});
         this.layoutsRoot = root.createDiv({cls: "control-view-layouts"});
         this.listRoot = root.createDiv({cls: "control-view-items"});
+        this.toolsRoot = root.createDiv({cls: "control-view-tools"});
 
+        this.renderTools();
         this.renderLayouts();
         this.items.forEach(item => this.renderItem(item))
 
@@ -108,6 +120,40 @@ export default class ControlView extends ItemView implements PresentationState {
                 })
             })
         });
+    }
+
+    renderTools() {
+        const row = this.toolsRoot.createDiv({cls: "control-view-tools-row"});
+
+        row.createDiv({cls: "control-view-tools-button"}, btn => {
+            btn.createDiv({cls: "clickable-icon"}, icon => {
+                setIcon(icon, "clipboard-paste");
+                setTooltip(icon, "Paste image url");
+                icon.addEventListener("click", async () => {
+                    return window.navigator.clipboard.readText().then(s => this.addUrl(s));
+                })
+            });
+        });
+
+        row.createDiv({cls: "control-view-tools-drop-area"}, area => {
+            area.createSpan({cls: "", text: "Drag image here"});
+            area.addEventListener("drop", async ev => {
+                ev.preventDefault()
+                if (this.draggedFile != null) {
+                    const promise = this.addFile(this.draggedFile);
+                    this.draggedFile = null;
+                    return promise;
+                }
+            });
+            area.addEventListener("dragover", ev => {
+                ev.preventDefault()
+                if (this.draggedFile != null && ev.dataTransfer) {
+                    ev.dataTransfer.dropEffect = "copy";
+                }
+            });
+        });
+
+        row.createDiv({cls: "control-view-tools-right-spacer"});
     }
 
     private getLayoutClass(layoutVariant: string) {
